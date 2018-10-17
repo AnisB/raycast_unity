@@ -16,6 +16,7 @@ namespace rcu
 	struct TIntersection
 	{
 		int validity;
+		float t;
 		uint32_t geometryID;
 		uint32_t subMeshID;
 		uint32_t triangleID;

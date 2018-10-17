@@ -10,7 +10,7 @@
 
 namespace rcu
 {
-	void error_handler(void*, const RTCError code, const char* str)
+	void error_handler(void*, const RTCError code, const char* str = nullptr)
 	{
 		if (code == RTC_ERROR_NONE)
 			return;
@@ -33,7 +33,9 @@ namespace rcu
 	, _geometriesIndexes(allocator)
 	{
 		// Create the device
-		_device = rtcNewDevice("");
+		_device = rtcNewDevice("verbose=1");
+
+		error_handler(nullptr, rtcGetDeviceError(_device));
 
 		// Set the error handler
 		rtcSetDeviceErrorFunction(_device, error_handler, nullptr);
@@ -50,6 +52,13 @@ namespace rcu
 		// loop through the geometries
 		uint32_t numGeometries = scene.geometryArray.size();
 		_geometriesIndexes.resize(numGeometries);
+
+		// Create a new scene
+		_scene = rtcNewScene(_device);
+
+		// Set the target scene
+		_targetScene = &scene;
+
 		for (uint32_t geoIdx = 0; geoIdx < numGeometries; ++geoIdx)
 		{
 			// Fetch the current geometry
@@ -58,10 +67,12 @@ namespace rcu
 			// Create a new geometry
 			RTCGeometry newGeo = rtcNewGeometry(_device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
-			// Upload the buffers
-			bento::Vector3* vertices = (bento::Vector3*)rtcSetNewGeometryBuffer(newGeo, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(bento::Vector3*), currentGeometry.vertexArray.size());
+			// Upload the positions
+			bento::Vector3* vertices = (bento::Vector3*)rtcSetNewGeometryBuffer(newGeo, RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, sizeof(bento::Vector3), currentGeometry.vertexArray.size());
 			memcpy(vertices, currentGeometry.vertexArray.begin(), sizeof(bento::Vector3) * currentGeometry.vertexArray.size());
-			bento::IVector3* triangles = (bento::IVector3*)rtcSetNewGeometryBuffer(newGeo, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(bento::IVector3*), currentGeometry.indexArray.size());
+
+			// Upload the triangles
+			bento::IVector3* triangles = (bento::IVector3*)rtcSetNewGeometryBuffer(newGeo, RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, sizeof(bento::IVector3), currentGeometry.indexArray.size());
 			memcpy(triangles, currentGeometry.indexArray.begin(), sizeof(bento::IVector3) * currentGeometry.indexArray.size());
 
 			// Commit the geometry
@@ -112,10 +123,15 @@ namespace rcu
 			// Set the min/max values
 			rayHitArray[rayIndex].ray.tnear = currentRay.tmin;
 			rayHitArray[rayIndex].ray.tfar = currentRay.tmax;
-		}
 
-		// Throw all our rays
-		rtcIntersect1M(_scene, &context, rayHitArray.begin(), numRays, 0);
+			rayHitArray[rayIndex].hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+			rayHitArray[rayIndex].hit.geomID = RTC_INVALID_GEOMETRY_ID;
+			rayHitArray[rayIndex].ray.mask = 0xffffffff;
+			rayHitArray[rayIndex].ray.time = 0.0f;
+
+			// Throw the ray
+			rtcIntersect1(_scene, &context, &rayHitArray[rayIndex]);
+		}
 
 		// Process the intersections
 		for (uint32_t rayIndex = 0; rayIndex < numRays; ++rayIndex)
@@ -131,14 +147,16 @@ namespace rcu
 			{
 				const TGeometry& targetGeometry = _targetScene->geometryArray[currentHit.hit.geomID];
 				currentIntersection.validity = 1;
+				currentIntersection.t = currentHit.ray.tfar;
 				currentIntersection.geometryID = targetGeometry.gameObjectID;
 				currentIntersection.subMeshID = targetGeometry.subMeshID;
 				currentIntersection.triangleID = currentHit.hit.primID;
-				currentIntersection.barycentricCoordinates = { currentHit.hit.u, currentHit.hit.v };
+				currentIntersection.barycentricCoordinates = { currentHit.hit.u, currentHit.hit.v, 1.0f - currentHit.hit.u - currentHit.hit.v };
 			}
 			else
 			{
 				currentIntersection.validity = 0;
+				currentIntersection.t = FLT_MAX;
 				currentIntersection.geometryID = (uint32_t)-1;
 				currentIntersection.subMeshID = (uint32_t)-1;
 				currentIntersection.triangleID = (uint32_t)-1;

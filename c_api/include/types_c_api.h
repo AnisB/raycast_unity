@@ -20,6 +20,7 @@ struct TRay
 struct TIntersection
 {
 	int validity;
+	float t;
 	uint32_t objectID;
 	uint32_t subMeshID;
 	uint32_t triangleID;

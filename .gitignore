@@ -1,2 +1,6 @@
 build_vc15_win64/
 output/
+unity_sample/rcu_sample/Library/
+unity_sample/rcu_sample/Temp/
+unity_sample/rcu_sample/obj/
+unity_sample/rcu_sample/.vs/
