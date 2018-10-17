@@ -10,4 +10,4 @@ bento_sources(source_files "${RCU_CAPI_SRC}" "c_api")
 
 # Generate the static library
 bento_dynamic_lib("rcu_dylib" "c_api" "${header_files};${source_files};" "${RCU_SDK_INCLUDE};${RCU_3RD_LIBRARIES};${RCU_CAPI_INCLUDE}")
-target_link_libraries("rcu_dylib" "rcu_sdk" "bento_sdk")
+target_link_libraries("rcu_dylib" "rcu_sdk" "bento_sdk" "${RCU_3RD_LIBRARIES}/embree/lib/embree3.lib")
