@@ -21,6 +21,29 @@ public class SphericalProbe : MonoBehaviour
 
     Dictionary<int, GameObject> objectMap = new Dictionary<int, GameObject>();
 
+    [ContextMenu("Rebuild")]
+    public void RebuildRayTracingManager()
+    {
+        if(rcuManager != null)
+        {
+            objectMap.Clear();
+            rcuManager.ReleaseRaycastEnvironment();
+            rcuManager = null;
+        }
+
+        rcuManager = new RCUManager();
+        MeshRenderer[] meshRendererArray = FindObjectsOfType<MeshRenderer>();
+        for (int meshIdx = 0; meshIdx < meshRendererArray.Length; ++meshIdx)
+        {
+            GameObject gameObj = meshRendererArray[meshIdx].gameObject;
+            objectMap[gameObj.GetInstanceID()] = gameObj;
+        }
+        rcuManager.SetupRaycastEnvironment(meshRendererArray);
+        rayArray = new RCUCApi.RCURay[rayResolution * rayResolution];
+        intersectionArray = new RCUCApi.RCUIntersection[rayResolution * rayResolution];
+    }
+
+
     public void Start()
     {
         rcuManager = new RCUManager();
@@ -31,6 +54,8 @@ public class SphericalProbe : MonoBehaviour
             objectMap[gameObj.GetInstanceID()] = gameObj;
         }
         rcuManager.SetupRaycastEnvironment(meshRendererArray);
+        rayArray = new RCUCApi.RCURay[rayResolution * rayResolution];
+        intersectionArray = new RCUCApi.RCUIntersection[rayResolution * rayResolution];
     }
 
     public void Update()
