@@ -4,31 +4,11 @@ using UnityEngine;
 
 public class RCUCApi
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RCURay
-    {
-        public float org_x;
-        public float org_y;
-        public float org_z;
-        public float dir_x;
-        public float dir_y;
-        public float dir_z;
-        public float tmin;
-        public float tmax;
-    }
+    // Size of the ray data structure
+    public const int RayDataSize = 8;
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RCUIntersection
-    {
-        public int validity;
-        public float t;
-        public uint geoID;
-        public uint subMeshID;
-        public uint triangleID;
-        public float u;
-        public float v;
-        public float w;
-    }
+    // Size of the intersection data structure
+    public const int IntersectionDataSize = 8;
 
     // Allocator API
     [DllImport ("rcu_dylib")]
@@ -52,7 +32,7 @@ public class RCUCApi
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_raycast_manager_release(IntPtr manager);
 	[DllImport ("rcu_dylib")]
-	public static extern void rcu_raycast_manager_run(IntPtr manager, RCURay[] rayArray, RCUIntersection[] intersectionArray, uint numRays);
+	public static extern void rcu_raycast_manager_run(IntPtr manager, float[] rayDataArray, int[] intersectionDataArray, uint numRays);
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_destroy_raycast_manager(IntPtr manager);
 }

@@ -73,9 +73,9 @@ public class RCUManager
         RCUCApi.rcu_raycast_manager_setup(rcuRaycastManager, rcuScene);
     }
 
-    public void Run(RCUCApi.RCURay[] rayArray, RCUCApi.RCUIntersection[] intersectionArray)
+    public void Run(float[] rayDataArray, int[] intersectionDataArray, int numRays)
 	{
-        RCUCApi.rcu_raycast_manager_run(rcuRaycastManager, rayArray, intersectionArray, (uint)rayArray.Length);
+        RCUCApi.rcu_raycast_manager_run(rcuRaycastManager, rayDataArray, intersectionDataArray, (uint)numRays);
     }
 
 	public void ReleaseRaycastEnvironment()

@@ -78,7 +78,7 @@ PlayerSettings:
   bakeCollisionMeshes: 0
   forceSingleInstance: 0
   resizableWindow: 0
-  useMacAppStoreValidation: 0
+  useMacAppStoreValidation: 1
   macAppStoreCategory: public.app-category.games
   gpuSkinning: 1
   graphicsJobs: 0
@@ -647,7 +647,7 @@ PlayerSettings:
   cloudServicesEnabled:
     UNet: 1
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: 2b15cce3-5311-4277-8b6e-8419c71dc0e9
   projectName: rcu_sample
   organizationId: benyoub-anis-gmail-com

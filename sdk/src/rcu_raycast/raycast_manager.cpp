@@ -31,9 +31,10 @@ namespace rcu
 	TRaycastManager::TRaycastManager(bento::IAllocator& allocator)
 	: _allocator(allocator)
 	, _geometriesIndexes(allocator)
+	, _rayHitArray(allocator)
 	{
 		// Create the device
-		_device = rtcNewDevice("verbose=1");
+		_device = rtcNewDevice("");
 
 		error_handler(nullptr, rtcGetDeviceError(_device));
 
@@ -101,43 +102,55 @@ namespace rcu
 		RTCIntersectContext context;
 		rtcInitIntersectContext(&context);
 
-		// Create the hit array
-		bento::Vector<RTCRayHit> rayHitArray(_allocator, numRays);
+		if (_rayHitArray.size() != numRays)
+		{
+			_rayHitArray.resize(numRays);
+		}
+
+		int32_t signedRayCount = (int32_t)numRays;
 
 		// Initialize the ray array
-		for (uint32_t rayIndex = 0; rayIndex < numRays; ++rayIndex)
+		#pragma omp parallel for
+		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
 		{
 			// Grab the current ray
 			const TRay& currentRay = rayArray[rayIndex];
 
+			// Fetch the target ray
+			RTCRayHit& rayHit = _rayHitArray[rayIndex];
+
 			// Set the origin
-			rayHitArray[rayIndex].ray.org_x = currentRay.origin.x;
-			rayHitArray[rayIndex].ray.org_y = currentRay.origin.y;
-			rayHitArray[rayIndex].ray.org_z = currentRay.origin.z;
+			rayHit.ray.org_x = currentRay.origin.x;
+			rayHit.ray.org_y = currentRay.origin.y;
+			rayHit.ray.org_z = currentRay.origin.z;
 
 			// Set the direction
-			rayHitArray[rayIndex].ray.dir_x = currentRay.direction.x;
-			rayHitArray[rayIndex].ray.dir_y = currentRay.direction.y;
-			rayHitArray[rayIndex].ray.dir_z = currentRay.direction.z;
+			rayHit.ray.dir_x = currentRay.direction.x;
+			rayHit.ray.dir_y = currentRay.direction.y;
+			rayHit.ray.dir_z = currentRay.direction.z;
 
 			// Set the min/max values
-			rayHitArray[rayIndex].ray.tnear = currentRay.tmin;
-			rayHitArray[rayIndex].ray.tfar = currentRay.tmax;
+			rayHit.ray.tnear = currentRay.tmin;
+			rayHit.ray.tfar = currentRay.tmax;
 
-			rayHitArray[rayIndex].hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
-			rayHitArray[rayIndex].hit.geomID = RTC_INVALID_GEOMETRY_ID;
-			rayHitArray[rayIndex].ray.mask = 0xffffffff;
-			rayHitArray[rayIndex].ray.time = 0.0f;
+			rayHit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+			rayHit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+			rayHit.ray.mask = 0xffffffff;
+			rayHit.ray.time = 0.0f;
+		}
 
-			// Throw the ray
-			rtcIntersect1(_scene, &context, &rayHitArray[rayIndex]);
+		#pragma omp parallel for
+		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
+		{
+			rtcIntersect1(_scene, &context, &_rayHitArray[rayIndex]);
 		}
 
 		// Process the intersections
-		for (uint32_t rayIndex = 0; rayIndex < numRays; ++rayIndex)
+		#pragma omp parallel for
+		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
 		{
 			// Fetch the embree hit to read and process
-			RTCRayHit& currentHit = rayHitArray[rayIndex];
+			RTCRayHit& currentHit = _rayHitArray[rayIndex];
 
 			// Fetch the intersection to fill
 			TIntersection& currentIntersection = intersectionArray[rayIndex];

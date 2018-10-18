@@ -9,24 +9,6 @@
 	#define RCU_EXPORT
 #endif
 
-struct TRay
-{
-	float origin[3];
-	float direction[3];
-	float tmin;
-	float tmax;
-};
-
-struct TIntersection
-{
-	int validity;
-	float t;
-	uint32_t objectID;
-	uint32_t subMeshID;
-	uint32_t triangleID;
-	float barycentricCoordinates[3];
-};
-
 struct RCURaycastManagerObject;
 struct RCUAllocatorObject;
 struct RCUSceneObject;

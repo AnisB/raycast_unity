@@ -28,7 +28,7 @@ namespace rcu
 
 		const TScene* _targetScene;
 		bento::Vector<uint32_t> _geometriesIndexes;
-
+		bento::Vector<RTCRayHit> _rayHitArray;
 	public:
 		bento::IAllocator& _allocator;
 
