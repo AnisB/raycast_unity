@@ -22,5 +22,5 @@ namespace rcu
 	};
 
 	// Function to append	
-	void append_geometry(TScene& targetScene, uint32_t objectID, uint32_t subMeshID, float* positionArray, uint32_t numVerts, int32_t* indexArray, uint32_t numTriangles, const char* debugName = nullptr);
+	void append_geometry(TScene& targetScene, uint32_t objectID, uint32_t subMeshID, float* positionArray, uint32_t numVerts, int32_t* indexArray, uint32_t numTriangles, const float* transformMatrix);
 }

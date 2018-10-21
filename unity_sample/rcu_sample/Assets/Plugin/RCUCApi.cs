@@ -20,7 +20,7 @@ public class RCUCApi
 	[DllImport ("rcu_dylib")]
 	public static extern IntPtr rcu_create_scene(IntPtr alloc);
 	[DllImport ("rcu_dylib")]
-	public static extern void rcu_scene_append_geometry(IntPtr scene, uint geoID, uint submeshID, float[] positionArray, uint numVerts, int[] indexArray, uint numTriangles, char[] debug_name);
+	public static extern void rcu_scene_append_geometry(IntPtr scene, uint geoID, uint submeshID, float[] positionArray, uint numVerts, int[] indexArray, uint numTriangles, float[] transformMatrix);
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_destroy_scene(IntPtr scene);
 

@@ -49,11 +49,11 @@ public class SphericalProbe : MonoBehaviour
         InitializeRaycastData();
     }
 
-
     public void Start()
     {
         InitializeRaycastData();
     }
+
 
     public void Update()
     {

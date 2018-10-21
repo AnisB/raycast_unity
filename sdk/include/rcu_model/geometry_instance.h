@@ -15,13 +15,11 @@ namespace rcu
 		TGeometry(bento::IAllocator& allocator)
 		: vertexArray(allocator)
 		, indexArray(allocator)
-		, debugName(allocator)
 		{
 
 		}
 		uint32_t gameObjectID;
 		uint32_t subMeshID;
-		bento::DynamicString debugName;
 		bento::Vector<bento::Vector3> vertexArray;
 		bento::Vector<bento::IVector3> indexArray;
 	};
