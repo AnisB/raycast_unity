@@ -31,7 +31,8 @@ namespace rcu
 	TRaycastManager::TRaycastManager(bento::IAllocator& allocator)
 	: _allocator(allocator)
 	, _geometriesIndexes(allocator)
-	, _rayHitArray(allocator)
+	, _rayHitGroupArray(allocator)
+	, _rayHitSingleArray(allocator, 16)
 	{
 		// Create the device
 		_device = rtcNewDevice("");
@@ -96,75 +97,171 @@ namespace rcu
 		_scene = nullptr;
 	}
 
-	void TRaycastManager::run(const TRay* rayArray, TIntersection* intersectionArray, uint32_t numRays)
+	void TRaycastManager::run(const TRay* rayArray, TIntersection* intersectionArray, uint32_t numRays, bool runSIMD)
 	{
 		// Create an intersection context
 		RTCIntersectContext context;
 		rtcInitIntersectContext(&context);
 
-		if (_rayHitArray.size() != numRays)
+		int32_t numRayGroups = (uint32_t)(numRays / 16);
+		int32_t rayBatchGroupSize = (uint32_t)(numRayGroups * 16);
+		uint32_t rayRemain = numRays % 16;
+
+		// Compute the ray quotient and remain
+		if (runSIMD)
 		{
-			_rayHitArray.resize(numRays);
+			numRayGroups = (uint32_t)(numRays / 16);
+			rayBatchGroupSize = (uint32_t)(numRayGroups * 16);
+			rayRemain = numRays % 16;
+		}
+		else
+		{
+			numRayGroups = 0;
+			rayBatchGroupSize = 0;
+			rayRemain = numRays;
 		}
 
-		int32_t signedRayCount = (int32_t)numRays;
-
-		// Initialize the ray array
-		#pragma omp parallel for
-		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
+		// Make sure the arrays are the right size
+		if (_rayHitGroupArray.size() < (uint32_t)numRayGroups)
 		{
-			// Grab the current ray
-			const TRay& currentRay = rayArray[rayIndex];
+			_rayHitGroupArray.resize(numRayGroups);
+		}
+		if (_rayHitSingleArray.size() < rayRemain)
+		{
+			_rayHitSingleArray.resize(rayRemain);
+		}
 
+		// Initialize the ray group array
+		#pragma omp parallel for
+		for (int32_t rayGroupIndex = 0; rayGroupIndex < numRayGroups; ++rayGroupIndex)
+		{
 			// Fetch the target ray
-			RTCRayHit& rayHit = _rayHitArray[rayIndex];
+			RTCRayHit16& rayHitGroup = _rayHitGroupArray[rayGroupIndex];
+
+			for (uint32_t rayIdx = 0; rayIdx < 16; ++rayIdx)
+			{
+				// Grab the current ray to tpush to the group
+				const TRay& currentRay = rayArray[ 16 * rayGroupIndex + rayIdx];
+
+				// Set the origin
+				rayHitGroup.ray.org_x[rayIdx] = currentRay.origin.x;
+				rayHitGroup.ray.org_y[rayIdx] = currentRay.origin.y;
+				rayHitGroup.ray.org_z[rayIdx] = currentRay.origin.z;
+
+				// Set the direction
+				rayHitGroup.ray.dir_x[rayIdx] = currentRay.direction.x;
+				rayHitGroup.ray.dir_y[rayIdx] = currentRay.direction.y;
+				rayHitGroup.ray.dir_z[rayIdx] = currentRay.direction.z;
+
+				// Set the min/max values
+				rayHitGroup.ray.tnear[rayIdx] = currentRay.tmin;
+				rayHitGroup.ray.tfar[rayIdx] = currentRay.tmax;
+
+				rayHitGroup.hit.instID[rayIdx][0] = RTC_INVALID_GEOMETRY_ID;
+				rayHitGroup.hit.geomID[rayIdx] = RTC_INVALID_GEOMETRY_ID;
+				rayHitGroup.ray.mask[rayIdx] = 0xffffffff;
+				rayHitGroup.ray.time[rayIdx] = 0.0f;
+			}
+		}
+
+		// Initialize the single rays
+		for (uint32_t raySingleIndex = 0; raySingleIndex < rayRemain; ++raySingleIndex)
+		{
+			// Fetch the target ray
+			RTCRayHit& rayHitSingle = _rayHitSingleArray[raySingleIndex];
+
+			// Grab the current ray to tpush to the group
+			const TRay& currentRay = rayArray[rayBatchGroupSize + raySingleIndex];
 
 			// Set the origin
-			rayHit.ray.org_x = currentRay.origin.x;
-			rayHit.ray.org_y = currentRay.origin.y;
-			rayHit.ray.org_z = currentRay.origin.z;
+			rayHitSingle.ray.org_x = currentRay.origin.x;
+			rayHitSingle.ray.org_y = currentRay.origin.y;
+			rayHitSingle.ray.org_z = currentRay.origin.z;
 
 			// Set the direction
-			rayHit.ray.dir_x = currentRay.direction.x;
-			rayHit.ray.dir_y = currentRay.direction.y;
-			rayHit.ray.dir_z = currentRay.direction.z;
+			rayHitSingle.ray.dir_x = currentRay.direction.x;
+			rayHitSingle.ray.dir_y = currentRay.direction.y;
+			rayHitSingle.ray.dir_z = currentRay.direction.z;
 
 			// Set the min/max values
-			rayHit.ray.tnear = currentRay.tmin;
-			rayHit.ray.tfar = currentRay.tmax;
+			rayHitSingle.ray.tnear = currentRay.tmin;
+			rayHitSingle.ray.tfar = currentRay.tmax;
 
-			rayHit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
-			rayHit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
-			rayHit.ray.mask = 0xffffffff;
-			rayHit.ray.time = 0.0f;
+			rayHitSingle.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+			rayHitSingle.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+			rayHitSingle.ray.mask = 0xffffffff;
+			rayHitSingle.ray.time = 0.0f;
 		}
 
+		// All the flags that
+		int validityFlags = 0xff;
+
+		// Let's run all the SIMD rays
 		#pragma omp parallel for
-		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
+		for (int32_t rayGroupIndex = 0; rayGroupIndex < numRayGroups; ++rayGroupIndex)
 		{
-			rtcIntersect1(_scene, &context, &_rayHitArray[rayIndex]);
+			rtcIntersect16(&validityFlags, _scene, &context, &_rayHitGroupArray[rayGroupIndex]);
+		}
+
+		// Let's run all non-SIMD rays
+		for (uint32_t raySingleIndex = 0; raySingleIndex < rayRemain; ++raySingleIndex)
+		{
+			rtcIntersect1(_scene, &context, &_rayHitSingleArray[raySingleIndex]);
 		}
 
 		// Process the intersections
 		#pragma omp parallel for
-		for (int32_t rayIndex = 0; rayIndex < signedRayCount; ++rayIndex)
+		for (int32_t rayGroupIndex = 0; rayGroupIndex < numRayGroups; ++rayGroupIndex)
 		{
-			// Fetch the embree hit to read and process
-			RTCRayHit& currentHit = _rayHitArray[rayIndex];
+			// Fetch the target ray
+			RTCRayHit16& rayHitGroup = _rayHitGroupArray[rayGroupIndex];
+
+			for (uint32_t rayIdx = 0; rayIdx < 16; ++rayIdx)
+			{
+				// Fetch the intersection to fill
+				TIntersection& currentIntersection = intersectionArray[16 * rayGroupIndex + rayIdx];
+
+				// Process the hit
+				if (rayHitGroup.hit.geomID[rayIdx] != RTC_INVALID_GEOMETRY_ID)
+				{
+					const TGeometry& targetGeometry = _targetScene->geometryArray[rayHitGroup.hit.geomID[rayIdx]];
+					currentIntersection.validity = 1;
+					currentIntersection.t = rayHitGroup.ray.tfar[rayIdx];
+					currentIntersection.geometryID = targetGeometry.gameObjectID;
+					currentIntersection.subMeshID = targetGeometry.subMeshID;
+					currentIntersection.triangleID = rayHitGroup.hit.primID[rayIdx];
+					currentIntersection.barycentricCoordinates = { 1.0f - rayHitGroup.hit.u[rayIdx] - rayHitGroup.hit.v[rayIdx], rayHitGroup.hit.u[rayIdx], rayHitGroup.hit.v[rayIdx] };
+				}
+				else
+				{
+					currentIntersection.validity = 0;
+					currentIntersection.t = FLT_MAX;
+					currentIntersection.geometryID = (uint32_t)-1;
+					currentIntersection.subMeshID = (uint32_t)-1;
+					currentIntersection.triangleID = (uint32_t)-1;
+					currentIntersection.barycentricCoordinates = { 0, 0, 0 };
+				}
+			}
+		}
+
+		for (uint32_t raySingleIndex = 0; raySingleIndex < rayRemain; ++raySingleIndex)
+		{
+			// Fetch the target ray
+			RTCRayHit& rayHitSingle = _rayHitSingleArray[raySingleIndex];
 
 			// Fetch the intersection to fill
-			TIntersection& currentIntersection = intersectionArray[rayIndex];
+			TIntersection& currentIntersection = intersectionArray[rayBatchGroupSize + raySingleIndex];
 
 			// Process the hit
-			if (currentHit.hit.geomID != RTC_INVALID_GEOMETRY_ID)
+			if (rayHitSingle.hit.geomID != RTC_INVALID_GEOMETRY_ID)
 			{
-				const TGeometry& targetGeometry = _targetScene->geometryArray[currentHit.hit.geomID];
+				const TGeometry& targetGeometry = _targetScene->geometryArray[rayHitSingle.hit.geomID];
 				currentIntersection.validity = 1;
-				currentIntersection.t = currentHit.ray.tfar;
+				currentIntersection.t = rayHitSingle.ray.tfar;
 				currentIntersection.geometryID = targetGeometry.gameObjectID;
 				currentIntersection.subMeshID = targetGeometry.subMeshID;
-				currentIntersection.triangleID = currentHit.hit.primID;
-				currentIntersection.barycentricCoordinates = { currentHit.hit.u, currentHit.hit.v, 1.0f - currentHit.hit.u - currentHit.hit.v };
+				currentIntersection.triangleID = rayHitSingle.hit.primID;
+				currentIntersection.barycentricCoordinates = { 1.0f - rayHitSingle.hit.u - rayHitSingle.hit.v, rayHitSingle.hit.u, rayHitSingle.hit.v };
 			}
 			else
 			{
@@ -173,7 +270,7 @@ namespace rcu
 				currentIntersection.geometryID = (uint32_t)-1;
 				currentIntersection.subMeshID = (uint32_t)-1;
 				currentIntersection.triangleID = (uint32_t)-1;
-				currentIntersection.barycentricCoordinates = { 0, 0 };
+				currentIntersection.barycentricCoordinates = { 0, 0, 0 };
 			}
 		}
 	}

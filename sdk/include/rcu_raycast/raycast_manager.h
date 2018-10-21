@@ -19,7 +19,7 @@ namespace rcu
 		void setup(const TScene& targetScene);
 		void release();
 
-		void run(const TRay* rayArray,  TIntersection* intersectionArray, uint32_t numRays);
+		void run(const TRay* rayArray,  TIntersection* intersectionArray, uint32_t numRays, bool runSIMD);
 
 	private:
 		// Embree structures
@@ -28,7 +28,8 @@ namespace rcu
 
 		const TScene* _targetScene;
 		bento::Vector<uint32_t> _geometriesIndexes;
-		bento::Vector<RTCRayHit> _rayHitArray;
+		bento::Vector<RTCRayHit16> _rayHitGroupArray;
+		bento::Vector<RTCRayHit> _rayHitSingleArray;
 	public:
 		bento::IAllocator& _allocator;
 

@@ -49,20 +49,31 @@ public class SphericalProbe : MonoBehaviour
         InitializeRaycastData();
     }
 
+    [ContextMenu("RunSIMD")]
+    public void RunSIMD()
+    {
+        RunRays(true);
+    }
+
+    [ContextMenu("RunSerial")]
+    public void runSerial()
+    {
+        RunRays(false);
+    }
+
     public void Start()
     {
         InitializeRaycastData();
     }
 
-
-    public void Update()
+    void RunRays(bool runSIMD)
     {
-        if(rcuManager == null)
+        if (rcuManager == null)
         {
             InitializeRaycastData();
         }
 
-        for(int thetaIdx = 0; thetaIdx < rayResolution; ++thetaIdx)
+        for (int thetaIdx = 0; thetaIdx < rayResolution; ++thetaIdx)
         {
             float theta = thetaIdx / (2.0f * Mathf.PI);
             for (int phiIdx = 0; phiIdx < rayResolution; ++phiIdx)
@@ -85,16 +96,19 @@ public class SphericalProbe : MonoBehaviour
         }
 
         // Proceed with the raycast
-        rcuManager.Run(rayDataArray, intersectionDataArray, rayResolution * rayResolution);
+        rcuManager.Run(rayDataArray, intersectionDataArray, rayResolution * rayResolution, runSIMD);
+    }
 
+    public void Update()
+    {
         for (int rayIdx = 0; rayIdx < rayResolution * rayResolution; ++rayIdx)
         {
             Vector3 rayOrigin = new Vector3(rayDataArray[8 * rayIdx], rayDataArray[8 * rayIdx + 1], rayDataArray[8 * rayIdx + 2]);
             Vector3 rayDirection = new Vector3(rayDataArray[8 * rayIdx + 3], rayDataArray[8 * rayIdx + 4], rayDataArray[8 * rayIdx + 5]);
 
-            if ((int)intersectionDataArray[ 8 * rayIdx] == 1)
+            if ((int)intersectionDataArray[8 * rayIdx] == 1)
             {
-                if(hitPoints)
+                if (hitPoints)
                 {
                     byte[] tBytes = BitConverter.GetBytes(intersectionDataArray[8 * rayIdx + 1]);
                     float t = BitConverter.ToSingle(tBytes, 0);
