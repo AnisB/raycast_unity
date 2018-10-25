@@ -13,7 +13,7 @@ extern "C"
 	// Function to release a scene from the raycast manager
 	RCU_EXPORT void rcu_raycast_manager_release(RCURaycastManagerObject* raycastManager);
 
-	RCU_EXPORT void rcu_raycast_manager_run(RCURaycastManagerObject* raycastManager, float* rayArrayData, int* intersectionDataArray, uint32_t numRays, bool runSIMD);
+	RCU_EXPORT void rcu_raycast_manager_run(RCURaycastManagerObject* raycastManager, float* rayArrayData, int* intersectionDataArray, uint32_t numRays);
 
 	// Function to destroy a rcu raycast manager
 	RCU_EXPORT void rcu_destroy_raycast_manager(RCURaycastManagerObject* raycastManager);

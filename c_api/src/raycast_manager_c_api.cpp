@@ -33,11 +33,11 @@ void rcu_raycast_manager_release(RCURaycastManagerObject* raycastManager)
 	raycastManagerPtr->release();
 }
 
-void rcu_raycast_manager_run(RCURaycastManagerObject* raycastManager, float* rayArrayData, int* intersectionDataArray, uint32_t numRays, bool runSIMD)
+void rcu_raycast_manager_run(RCURaycastManagerObject* raycastManager, float* rayArrayData, int* intersectionDataArray, uint32_t numRays)
 {
 	assert_msg(raycastManager != nullptr, "RaycastManager was null");
 	rcu::TRaycastManager* raycastManagerPtr = (rcu::TRaycastManager*)raycastManager;
-	raycastManagerPtr->run((rcu::TRay*)rayArrayData, (rcu::TIntersection*)intersectionDataArray, numRays, runSIMD);
+	raycastManagerPtr->run((rcu::TRay*)rayArrayData, (rcu::TIntersection*)intersectionDataArray, numRays);
 }
 
 void rcu_destroy_raycast_manager(RCURaycastManagerObject* raycastManager)

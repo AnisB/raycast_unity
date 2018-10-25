@@ -19,7 +19,7 @@ namespace rcu
 		void setup(const TScene& targetScene);
 		void release();
 
-		void run(const TRay* rayArray,  TIntersection* intersectionArray, uint32_t numRays, bool runSIMD);
+		void run(const TRay* rayArray,  TIntersection* intersectionArray, uint32_t numRays);
 
 	private:
 		// Embree structures

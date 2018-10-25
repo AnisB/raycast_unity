@@ -97,7 +97,7 @@ namespace rcu
 		_scene = nullptr;
 	}
 
-	void TRaycastManager::run(const TRay* rayArray, TIntersection* intersectionArray, uint32_t numRays, bool runSIMD)
+	void TRaycastManager::run(const TRay* rayArray, TIntersection* intersectionArray, uint32_t numRays)
 	{
 		// Create an intersection context
 		RTCIntersectContext context;
@@ -108,7 +108,7 @@ namespace rcu
 		uint32_t rayRemain = numRays % 16;
 
 		// Compute the ray quotient and remain
-		if (runSIMD)
+		if (true)
 		{
 			numRayGroups = (uint32_t)(numRays / 16);
 			rayBatchGroupSize = (uint32_t)(numRayGroups * 16);
@@ -132,7 +132,6 @@ namespace rcu
 		}
 
 		// Initialize the ray group array
-		#pragma omp parallel for
 		for (int32_t rayGroupIndex = 0; rayGroupIndex < numRayGroups; ++rayGroupIndex)
 		{
 			// Fetch the target ray
@@ -210,7 +209,6 @@ namespace rcu
 		}
 
 		// Process the intersections
-		#pragma omp parallel for
 		for (int32_t rayGroupIndex = 0; rayGroupIndex < numRayGroups; ++rayGroupIndex)
 		{
 			// Fetch the target ray

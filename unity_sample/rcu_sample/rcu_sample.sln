@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{715165C9-883B-BACB-7AD0-884DC1063DB6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rcu_sample", "Assembly-CSharp.csproj", "{715165C9-883B-BACB-7AD0-884DC1063DB6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -109,10 +109,10 @@ public class RCUManager
         UnityEngine.Debug.Log("RCU: Initializing the raycasting structures took " + sw.Elapsed.ToString());
     }
 
-    public void Run(float[] rayDataArray, int[] intersectionDataArray, int numRays, bool runSIMD)
+    public void Run(float[] rayDataArray, int[] intersectionDataArray, int numRays)
 	{
         sw.Restart();
-        RCUCApi.rcu_raycast_manager_run(rcuRaycastManager, rayDataArray, intersectionDataArray, (uint)numRays, runSIMD);
+        RCUCApi.rcu_raycast_manager_run(rcuRaycastManager, rayDataArray, intersectionDataArray, (uint)numRays);
         sw.Stop();
         UnityEngine.Debug.Log("RCU: Throwing the rays took " + sw.Elapsed.ToString());
     }

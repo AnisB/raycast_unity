@@ -49,16 +49,10 @@ public class SphericalProbe : MonoBehaviour
         InitializeRaycastData();
     }
 
-    [ContextMenu("RunSIMD")]
+    [ContextMenu("Run")]
     public void RunSIMD()
     {
-        RunRays(true);
-    }
-
-    [ContextMenu("RunSerial")]
-    public void runSerial()
-    {
-        RunRays(false);
+        RunRays();
     }
 
     public void Start()
@@ -66,7 +60,7 @@ public class SphericalProbe : MonoBehaviour
         InitializeRaycastData();
     }
 
-    void RunRays(bool runSIMD)
+    void RunRays()
     {
         if (rcuManager == null)
         {
@@ -75,10 +69,10 @@ public class SphericalProbe : MonoBehaviour
 
         for (int thetaIdx = 0; thetaIdx < rayResolution; ++thetaIdx)
         {
-            float theta = thetaIdx / (2.0f * Mathf.PI);
+            float theta = thetaIdx / (rayResolution - 1.0f) * (2.0f * Mathf.PI);
             for (int phiIdx = 0; phiIdx < rayResolution; ++phiIdx)
             {
-                float phi = phiIdx / (Mathf.PI);
+                float phi = phiIdx / (rayResolution - 1.0f) *  (Mathf.PI);
 
                 int currentRayIndex = thetaIdx * rayResolution + phiIdx;
 
@@ -96,7 +90,7 @@ public class SphericalProbe : MonoBehaviour
         }
 
         // Proceed with the raycast
-        rcuManager.Run(rayDataArray, intersectionDataArray, rayResolution * rayResolution, runSIMD);
+        rcuManager.Run(rayDataArray, intersectionDataArray, rayResolution * rayResolution);
     }
 
     public void Update()
@@ -121,7 +115,7 @@ public class SphericalProbe : MonoBehaviour
                 if (missPoints)
                 {
                     Color color = new Color(1.0f, 0.0f, 0.0f, 1.0f);
-                    Debug.DrawLine(rayOrigin + rayDirection * (range - 0.01f), rayOrigin + rayDirection * range, color);
+                    Debug.DrawLine(rayOrigin, rayOrigin + rayDirection * 0.5f, color);
                 }
             }
         }

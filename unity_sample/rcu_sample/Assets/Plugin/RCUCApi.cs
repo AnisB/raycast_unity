@@ -32,7 +32,7 @@ public class RCUCApi
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_raycast_manager_release(IntPtr manager);
 	[DllImport ("rcu_dylib")]
-	public static extern void rcu_raycast_manager_run(IntPtr manager, float[] rayDataArray, int[] intersectionDataArray, uint numRays, bool runSIMD);
+	public static extern void rcu_raycast_manager_run(IntPtr manager, float[] rayDataArray, int[] intersectionDataArray, uint numRays);
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_destroy_raycast_manager(IntPtr manager);
 }
