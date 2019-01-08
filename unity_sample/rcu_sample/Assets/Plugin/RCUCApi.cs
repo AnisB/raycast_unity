@@ -18,7 +18,7 @@ public class RCUCApi
     public const int RayMaxRange = 7;
 
     // Size of the intersection data structure
-    public const int IntersectionDataSize = 8;
+    public const int IntersectionDataSize = 16;
 
     // Data of the intersection
     public const int IntersectionValidity = 0;
@@ -29,6 +29,14 @@ public class RCUCApi
     public const int IntersectionBarycentricUIndex = 5;
     public const int IntersectionBarycentricVIndex = 6;
     public const int IntersectionBarycentricWIndex = 7;
+    public const int IntersectionPositionXIndex = 8;
+    public const int IntersectionPositionYIndex = 9;
+    public const int IntersectionPositionZIndex = 10;
+    public const int IntersectionNormalXIndex = 11;
+    public const int IntersectionNormalYIndex = 12;
+    public const int IntersectionNormalZIndex = 13;
+    public const int IntersectionTexCoordXIndex = 14;
+    public const int IntersectionTexCoordYIndex = 15;
 
     // Allocator API
     [DllImport ("rcu_dylib")]
@@ -40,7 +48,7 @@ public class RCUCApi
 	[DllImport ("rcu_dylib")]
 	public static extern IntPtr rcu_create_scene(IntPtr alloc);
 	[DllImport ("rcu_dylib")]
-	public static extern void rcu_scene_append_geometry(IntPtr scene, uint geoID, uint submeshID, float[] positionArray, uint numVerts, int[] indexArray, uint numTriangles, float[] transformMatrix);
+	public static extern void rcu_scene_append_geometry(IntPtr scene, uint geoID, uint submeshID, float[] positionArray, float[] normalArray, float[] texCoordArray, uint numVerts, int[] indexArray, uint numTriangles, float[] transformMatrix);
 	[DllImport ("rcu_dylib")]
 	public static extern void rcu_destroy_scene(IntPtr scene);
 

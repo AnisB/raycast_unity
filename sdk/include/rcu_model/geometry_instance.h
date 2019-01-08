@@ -14,6 +14,8 @@ namespace rcu
 		ALLOCATOR_BASED;
 		TGeometry(bento::IAllocator& allocator)
 		: vertexArray(allocator)
+		, normalArray(allocator)
+		, texCoordArray(allocator)
 		, indexArray(allocator)
 		{
 
@@ -21,6 +23,8 @@ namespace rcu
 		uint32_t gameObjectID;
 		uint32_t subMeshID;
 		bento::Vector<bento::Vector3> vertexArray;
+		bento::Vector<bento::Vector3> normalArray;
+		bento::Vector<bento::Vector2> texCoordArray;
 		bento::Vector<bento::IVector3> indexArray;
 	};
 }

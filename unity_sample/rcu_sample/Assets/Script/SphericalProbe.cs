@@ -90,6 +90,8 @@ public class SphericalProbe : MonoBehaviour
         Vector3 rayDirection = new Vector3();
 
         Vector3 positionShift = gameObject.transform.position - positionAtRun;
+        Vector3 intersectionPos = new Vector3();
+        Vector3 intersectionNormal = new Vector3();
 
         for (int rayIdx = 0; rayIdx < rayResolution * rayResolution; ++rayIdx)
         {
@@ -103,6 +105,8 @@ public class SphericalProbe : MonoBehaviour
                 if (hitPoints)
                 {
                     float t = rcuManager.IntersectionDistance(rayIdx);
+                    rcuManager.IntersectionPosition(rayIdx, ref intersectionPos);
+                    rcuManager.IntersectionNormal(rayIdx, ref intersectionNormal);
                     Debug.DrawLine(positionShift + rayOrigin + rayDirection * (t - 0.01f), positionShift + rayOrigin + rayDirection * t, Color.green);
                 }
             }

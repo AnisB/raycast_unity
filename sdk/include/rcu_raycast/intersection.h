@@ -21,5 +21,8 @@ namespace rcu
 		uint32_t subMeshID;
 		uint32_t triangleID;
 		bento::Vector3 barycentricCoordinates;
+		bento::Vector3 position;
+		bento::Vector3 normal;
+		bento::Vector2 texCoord;
 	};
 }

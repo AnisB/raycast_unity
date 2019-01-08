@@ -67,6 +67,8 @@ public class RCUManager
 
         // Allocate the array for the marshaling
         float[] vertArray = new float[3 * maxVertCount];
+        float[] normalDataArray = new float[3 * maxVertCount];
+        float[] texDataCoord = new float[2 * maxVertCount];
 
         int meshFilterIterator = 0;
 
@@ -109,12 +111,32 @@ public class RCUManager
                         vertArray[3 * vIdx + 2] = positionArray[vIdx].z;
                     }
 
+                    Vector3[] normalArray = currentMesh.normals;
+                    uint numNormals = (uint)normalArray.Length;
+                    for (int nIdx = 0; nIdx < numNormals; ++nIdx)
+                    {
+                        normalDataArray[3 * nIdx] = normalArray[nIdx].x;
+                        normalDataArray[3 * nIdx + 1] = normalArray[nIdx].y;
+                        normalDataArray[3 * nIdx + 2] = normalArray[nIdx].z;
+                    }
+
+                    Vector2[] uvArray = currentMesh.uv;
+                    int numTexCoords = uvArray.Length;
+                    if(numTexCoords > 0)
+                    {
+                        for (int tIdx = 0; tIdx < numTexCoords; ++tIdx)
+                        {
+                            texDataCoord[2 * tIdx] = uvArray[tIdx].x;
+                            texDataCoord[2 * tIdx + 1] = uvArray[tIdx].y;
+                        }
+                    }
+
                     // Flatten the index array
                     int[] subMeshIndices = currentMesh.GetIndices((int)subMeshIdx);
                     uint numTriangles = (uint)(subMeshIndices.Length / 3);
 
                     // Push the geometry to the scene
-                    RCUCApi.rcu_scene_append_geometry(rcuScene, (uint)meshFilterIterator, subMeshIdx, vertArray, numVerts, subMeshIndices, numTriangles, transformMatrix);
+                    RCUCApi.rcu_scene_append_geometry(rcuScene, (uint)meshFilterIterator, subMeshIdx, vertArray, normalDataArray, texDataCoord, numVerts, subMeshIndices, numTriangles, transformMatrix);
                 }
 
                 meshFilterIterator++;
@@ -217,5 +239,27 @@ public class RCUManager
         byte[] vBytes = BitConverter.GetBytes(vIdx);
         byte[] wBytes = BitConverter.GetBytes(wIdx);
         outBarycentrics.Set(BitConverter.ToSingle(uBytes, 0), BitConverter.ToSingle(vBytes, 0), BitConverter.ToSingle(wBytes, 0));
+    }
+
+    public void IntersectionPosition(int targetIntersection, ref Vector3 outPosition)
+    {
+        int xIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionPositionXIndex];
+        int yIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionPositionYIndex];
+        int zIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionPositionZIndex];
+        byte[] xBytes = BitConverter.GetBytes(xIdx);
+        byte[] yBytes = BitConverter.GetBytes(yIdx);
+        byte[] zBytes = BitConverter.GetBytes(zIdx);
+        outPosition.Set(BitConverter.ToSingle(xBytes, 0), BitConverter.ToSingle(yBytes, 0), BitConverter.ToSingle(zBytes, 0));
+    }
+
+    public void IntersectionNormal(int targetIntersection, ref Vector3 outNormal)
+    {
+        int xIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionNormalXIndex];
+        int yIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionNormalYIndex];
+        int zIdx = intersectionDataArray[RCUCApi.IntersectionDataSize * targetIntersection + RCUCApi.IntersectionNormalZIndex];
+        byte[] xBytes = BitConverter.GetBytes(xIdx);
+        byte[] yBytes = BitConverter.GetBytes(yIdx);
+        byte[] zBytes = BitConverter.GetBytes(zIdx);
+        outNormal.Set(BitConverter.ToSingle(xBytes, 0), BitConverter.ToSingle(yBytes, 0), BitConverter.ToSingle(zBytes, 0));
     }
 }

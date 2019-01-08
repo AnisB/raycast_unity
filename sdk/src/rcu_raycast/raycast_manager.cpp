@@ -3,6 +3,8 @@
 
 // bento includes
 #include <bento_base/log.h>
+#include <bento_math/vector3.h>
+#include <bento_math/vector2.h>
 
 // External includes
 #include <embree/include/embree3/rtcore.h>
@@ -229,6 +231,24 @@ namespace rcu
 					currentIntersection.subMeshID = targetGeometry.subMeshID;
 					currentIntersection.triangleID = rayHitGroup.hit.primID[rayIdx];
 					currentIntersection.barycentricCoordinates = { 1.0f - rayHitGroup.hit.u[rayIdx] - rayHitGroup.hit.v[rayIdx], rayHitGroup.hit.u[rayIdx], rayHitGroup.hit.v[rayIdx] };
+
+					// Grab the face's indexes
+					const bento::IVector3& currentFace = targetGeometry.indexArray[currentIntersection.triangleID];
+
+					// Interpolate the position
+					currentIntersection.position = targetGeometry.vertexArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+						+ targetGeometry.vertexArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+						+ targetGeometry.vertexArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
+
+					// Interpolate the normal
+					currentIntersection.normal = targetGeometry.normalArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+						+ targetGeometry.normalArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+						+ targetGeometry.normalArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
+
+					// Interpolate the texCoord
+					currentIntersection.texCoord = targetGeometry.texCoordArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+						+ targetGeometry.texCoordArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+						+ targetGeometry.texCoordArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
 				}
 				else
 				{
@@ -238,6 +258,9 @@ namespace rcu
 					currentIntersection.subMeshID = (uint32_t)-1;
 					currentIntersection.triangleID = (uint32_t)-1;
 					currentIntersection.barycentricCoordinates = { 0, 0, 0 };
+					currentIntersection.position = { 0, 0, 0 };
+					currentIntersection.normal = { 0, 0, 0 };
+					currentIntersection.texCoord = { 0, 0 };
 				}
 			}
 		}
@@ -260,6 +283,24 @@ namespace rcu
 				currentIntersection.subMeshID = targetGeometry.subMeshID;
 				currentIntersection.triangleID = rayHitSingle.hit.primID;
 				currentIntersection.barycentricCoordinates = { 1.0f - rayHitSingle.hit.u - rayHitSingle.hit.v, rayHitSingle.hit.u, rayHitSingle.hit.v };
+
+				// Grab the face's indexes
+				const bento::IVector3& currentFace = targetGeometry.indexArray[currentIntersection.triangleID];
+
+				// Interpolate the position
+				currentIntersection.position = targetGeometry.vertexArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+					+ targetGeometry.vertexArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+					+ targetGeometry.vertexArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
+
+				// Interpolate the normal
+				currentIntersection.normal = targetGeometry.normalArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+					+ targetGeometry.normalArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+					+ targetGeometry.normalArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
+
+				// Interpolate the texCoord
+				currentIntersection.texCoord = targetGeometry.texCoordArray[currentFace.x] * currentIntersection.barycentricCoordinates.x
+					+ targetGeometry.texCoordArray[currentFace.y] * currentIntersection.barycentricCoordinates.y
+					+ targetGeometry.texCoordArray[currentFace.z] * currentIntersection.barycentricCoordinates.z;
 			}
 			else
 			{
@@ -269,6 +310,9 @@ namespace rcu
 				currentIntersection.subMeshID = (uint32_t)-1;
 				currentIntersection.triangleID = (uint32_t)-1;
 				currentIntersection.barycentricCoordinates = { 0, 0, 0 };
+				currentIntersection.position = { 0, 0, 0 };
+				currentIntersection.normal = { 0, 0, 0 };
+				currentIntersection.texCoord = { 0, 0 };
 			}
 		}
 	}

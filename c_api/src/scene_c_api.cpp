@@ -17,11 +17,11 @@ RCUSceneObject* rcu_create_scene(RCUAllocatorObject* allocator)
 	return (RCUSceneObject*) newScene;
 }
 
-void rcu_scene_append_geometry(RCUSceneObject* scene, uint32_t geoID, uint32_t submeshID, float* positionArray, uint32_t numVerts, int32_t* indexArray, int32_t numTriangles, float* transformMatrix)
+void rcu_scene_append_geometry(RCUSceneObject* scene, uint32_t geoID, uint32_t submeshID, float* positionArray, float* normalArray, float* texCoordArray, uint32_t numVerts, int32_t* indexArray, int32_t numTriangles, float* transformMatrix)
 {
 	assert_msg(scene != nullptr, "Scene was null");
 	rcu::TScene* scenePtr = (rcu::TScene*)scene;
-	rcu::append_geometry(*scenePtr, geoID, submeshID, positionArray, numVerts, indexArray, numTriangles, transformMatrix);
+	rcu::append_geometry(*scenePtr, geoID, submeshID, positionArray, normalArray, texCoordArray, numVerts, indexArray, numTriangles, transformMatrix);
 }
 
 void rcu_destroy_scene(RCUSceneObject* scene)
