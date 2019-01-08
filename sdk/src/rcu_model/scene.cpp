@@ -33,5 +33,16 @@ namespace rcu
 		{
 			newGeometry.vertexArray[vertIdx] = transform * newGeometry.vertexArray[vertIdx];
 		}
+
+		bento::Matrix4 normalMatrix;
+		normalMatrix = bento::Inverse(transform);
+		normalMatrix = bento::transpose(normalMatrix);
+		for (uint32_t vertIdx = 0; vertIdx < numVerts; ++vertIdx)
+		{
+			bento::Vector4 normalTransformed = normalMatrix * bento::vector4(newGeometry.normalArray[vertIdx].x, newGeometry.normalArray[vertIdx].y, newGeometry.normalArray[vertIdx].z, 0.0f);
+			newGeometry.normalArray[vertIdx] = bento::vector3(normalTransformed.x, normalTransformed.y, normalTransformed.z);
+			newGeometry.normalArray[vertIdx] = bento::normalize(newGeometry.normalArray[vertIdx]);
+		}
+
 	}
 }

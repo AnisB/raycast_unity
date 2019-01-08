@@ -107,7 +107,7 @@ public class SphericalProbe : MonoBehaviour
                     float t = rcuManager.IntersectionDistance(rayIdx);
                     rcuManager.IntersectionPosition(rayIdx, ref intersectionPos);
                     rcuManager.IntersectionNormal(rayIdx, ref intersectionNormal);
-                    Debug.DrawLine(positionShift + rayOrigin + rayDirection * (t - 0.01f), positionShift + rayOrigin + rayDirection * t, Color.green);
+                    Debug.DrawLine(positionShift + intersectionPos, positionShift + intersectionPos + intersectionNormal * 0.1f, Color.green);
                 }
             }
             else
